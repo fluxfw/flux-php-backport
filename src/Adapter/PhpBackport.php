@@ -33,7 +33,7 @@ class PhpBackport
         echo "Port PHP 8.1 back to PHP 7.4 in " . $folder . "\n\n";
 
         $replaces = [
-            ["Change static return type to self", "/(\))(\s*)(:)(\s*)(static)([\s{])/", "$1/*$2$3$4$5*/$2$3$4self$6"]
+            ["Change static return type to self", "/(\))(\s*:\s*\??)(static)([\s{;|])/", "$1/*$2$3*/$2self$4"]
         ];
 
         $ext = [
