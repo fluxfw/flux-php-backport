@@ -13,7 +13,9 @@ class PhpBackport
     private const BEFORE_PARAMETER_TYPE = "[\s(,]";
     private const BEFORE_RETURN_TYPE_1 = "\)";
     private const BEFORE_RETURN_TYPE_2 = "\s*:\s*\??";
+    private const INDENT = "    ";
     private const PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
+    private const SPACE = "[ \t]";
     private const VISIBILITY = "(public|protected|private)";
 
 
@@ -42,6 +44,42 @@ class PhpBackport
         echo "Port PHP 8.1 back to PHP 7.4 in " . $folder . "\n\n";
 
         $replaces = [
+            [
+                "Change constructor properties to legacy syntax",
+                "/(" . static::SPACE . "*" . static::VISIBILITY . "\s+function\s+__construct\s*\()([\sA-Za-z0-9._$=,?]*)(\)\s*\{)/",
+                function (array $matches) : string {
+                    $properties = [];
+                    $parameters = [];
+                    $assignments = [];
+
+                    foreach (explode(",", $matches[3]) as $parameter) {
+                        $parameter = trim($parameter);
+
+                        if (empty($parameter)) {
+                            continue;
+                        }
+
+                        if (preg_match("/^" . static::VISIBILITY . "\s/", $parameter) > 0) {
+                            $properties[] = $parameter . ";";
+                            $parameter_parts = array_reverse(preg_split("/\s+/", $parameter));
+                            $parameters[] = $parameter_parts[1] . " " . $parameter_parts[0] . ",";
+                            $assignments[] = '$this->' . substr($parameter_parts[0], 1) . " = " . $parameter_parts[0] . ";";
+                        } else {
+                            $parameters[] = $parameter . ",";
+                        }
+                    }
+                    if (!empty($parameters)) {
+                        $parameters[count($parameters) - 1] = rtrim($parameters[count($parameters) - 1], ",");
+                    }
+
+                    return (!empty($properties) ? implode("", array_map(fn(string $property) : string => static::INDENT . $property . "\n", $properties)) : "")
+                        . $matches[1]
+                        . (!empty($parameters) ? "\n" . implode("", array_map(fn(string $parameter) : string => static::INDENT . static::INDENT . $parameter . "\n", $parameters)) . static::INDENT
+                            : "")
+                        . $matches[4]
+                        . (!empty($assignments) ? implode("", array_map(fn(string $assignment) : string => "\n" . static::INDENT . static::INDENT . $assignment, $assignments)) : "");
+                }
+            ],
             [
                 "Change static return type to self",
                 "/(" . static::BEFORE_RETURN_TYPE_1 . static::BEFORE_RETURN_TYPE_2 . ")(static)(" . static::AFTER_RETURN_TYPE . ")/",
@@ -88,7 +126,11 @@ class PhpBackport
 
                 echo "- " . $title . "\n";
 
-                $new_code = preg_replace($search, $replace, $code);
+                if (is_callable($replace)) {
+                    $new_code = preg_replace_callback($search, $replace, $code);
+                } else {
+                    $new_code = preg_replace($search, $replace, $code);
+                }
 
                 if (is_string($new_code)) {
                     $code = $new_code;
