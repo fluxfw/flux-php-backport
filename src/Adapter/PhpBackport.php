@@ -68,11 +68,16 @@ class PhpBackport
                             $parameters[] = $parameter . ",";
                         }
                     }
+
+                    if (empty($properties)) {
+                        return $matches[0];
+                    }
+
                     if (!empty($parameters)) {
                         $parameters[count($parameters) - 1] = rtrim($parameters[count($parameters) - 1], ",");
                     }
 
-                    return (!empty($properties) ? implode("", array_map(fn(string $property) : string => static::INDENT . $property . "\n", $properties)) : "")
+                    return implode("", array_map(fn(string $property) : string => static::INDENT . $property . "\n", $properties))
                         . $matches[1]
                         . (!empty($parameters) ? "\n" . implode("", array_map(fn(string $parameter) : string => static::INDENT . static::INDENT . $parameter . "\n", $parameters)) . static::INDENT
                             : "")
