@@ -14,6 +14,7 @@ class PhpBackport
     private const BEFORE_RETURN_TYPE_1 = "\)";
     private const BEFORE_RETURN_TYPE_2 = "\s*:\s*\??";
     private const PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
+    private const VISIBILITY = "(public|protected|private)";
 
 
     private function __construct()
@@ -55,6 +56,11 @@ class PhpBackport
                 "Remove mixed parameter type",
                 "/(" . static::BEFORE_PARAMETER_TYPE . ")(mixed)(\s*\\\$" . static::PARAM_NAME . static::AFTER_PARAMETER_TYPE . ")/",
                 "$1/*$2*/$3"
+            ],
+            [
+                "Remove readonly property modifier",
+                "/(" . static::VISIBILITY . "\s+)(readonly)(\s+)/",
+                "$1/*$3*/$4"
             ]
         ];
 
