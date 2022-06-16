@@ -11,7 +11,8 @@ class PhpBackport
     private const AFTER_PARAMETER_TYPE = "[\s),;=]";
     private const AFTER_RETURN_TYPE = "[\s{;|=]";
     private const BEFORE_PARAMETER_TYPE = "[\s(,]";
-    private const BEFORE_RETURN_TYPE = "\)\s*:\s*\??";
+    private const BEFORE_RETURN_TYPE_1 = "\)";
+    private const BEFORE_RETURN_TYPE_2 = "\s*:\s*\??";
     private const PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
 
 
@@ -42,13 +43,13 @@ class PhpBackport
         $replaces = [
             [
                 "Change static return type to self",
-                "/(" . static::BEFORE_RETURN_TYPE . ")(static)(" . static::AFTER_RETURN_TYPE . ")/",
+                "/(" . static::BEFORE_RETURN_TYPE_1 . static::BEFORE_RETURN_TYPE_2 . ")(static)(" . static::AFTER_RETURN_TYPE . ")/",
                 "$1/*$2*/self$3"
             ],
             [
                 "Remove mixed return type",
-                "/(" . static::BEFORE_RETURN_TYPE . "mixed)(" . static::AFTER_RETURN_TYPE . ")/",
-                ")/*$1*/$2"
+                "/(" . static::BEFORE_RETURN_TYPE_1 . ")(" . static::BEFORE_RETURN_TYPE_2 . "mixed)(" . static::AFTER_RETURN_TYPE . ")/",
+                "$1/*$2*/$3"
             ],
             [
                 "Remove mixed parameter type",
