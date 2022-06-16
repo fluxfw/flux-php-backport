@@ -8,6 +8,13 @@ use RecursiveIteratorIterator;
 class PhpBackport
 {
 
+    private const AFTER_PARAMETER_TYPE = "[\s),;=]";
+    private const AFTER_RETURN_TYPE = "[\s{;|=]";
+    private const BEFORE_PARAMETER_TYPE = "[\s(,]";
+    private const BEFORE_RETURN_TYPE = "\)\s*:\s*\??";
+    private const PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
+
+
     private function __construct()
     {
 
@@ -33,7 +40,21 @@ class PhpBackport
         echo "Port PHP 8.1 back to PHP 7.4 in " . $folder . "\n\n";
 
         $replaces = [
-            ["Change static return type to self", "/(\)\s*:\s*\??)(static)([\s{;|])/", "$1/*$2*/self$3"]
+            [
+                "Change static return type to self",
+                "/(" . static::BEFORE_RETURN_TYPE . ")(static)(" . static::AFTER_RETURN_TYPE . ")/",
+                "$1/*$2*/self$3"
+            ],
+            [
+                "Remove mixed return type",
+                "/(" . static::BEFORE_RETURN_TYPE . "mixed)(" . static::AFTER_RETURN_TYPE . ")/",
+                ")/*$1*/$2"
+            ],
+            [
+                "Remove mixed parameter type",
+                "/(" . static::BEFORE_PARAMETER_TYPE . ")(mixed)(\s*\\\$" . static::PARAM_NAME . static::AFTER_PARAMETER_TYPE . ")/",
+                "$1/*$2*/$3"
+            ]
         ];
 
         $ext = [
