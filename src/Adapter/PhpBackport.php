@@ -86,8 +86,8 @@ class PhpBackport
 
                     $parameters[count($parameters) - 1] = rtrim($parameters[count($parameters) - 1], ",");
 
-                    return implode(static::NEW_LINE, array_map(fn(string $property) : string => static::INDENT . $property, $properties)) . static::NEW_LINE . static::NEW_LINE
-                        . $matches[2] . $matches[3]
+                    return implode(static::NEW_LINE, array_map(fn(string $property) : string => static::INDENT . $property, $properties)) . static::NEW_LINE . static::NEW_LINE . static::NEW_LINE
+                        . $matches[1] . $matches[2]
                         . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $parameter) : string => static::INDENT . static::INDENT . $parameter, $parameters)) . static::NEW_LINE
                         . static::INDENT . $matches[5]
                         . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $assignment) : string => static::INDENT . static::INDENT . $assignment, $assignments));
