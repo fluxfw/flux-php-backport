@@ -50,6 +50,7 @@ class PhpBackport
         $BEFORE_RETURN_TYPE_2 = static::EMPTY . "*:" . static::EMPTY . "*\??";
         $BEFORE_RETURN_TYPE = $BEFORE_RETURN_TYPE_1 . $BEFORE_RETURN_TYPE_2;
         $PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
+        $UNION_TYPES = $PARAM_NAME . static::EMPTY . "*\|[A-Za-z_|\s*]+";
 
         $REPLACES = [
             [
@@ -112,6 +113,16 @@ class PhpBackport
             [
                 "Remove mixed return type",
                 "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . "mixed)(" . $AFTER_RETURN_TYPE . ")/",
+                "$1/*$2*/$3"
+            ],
+            [
+                "Remove union parameter types",
+                "/(" . $BEFORE_PARAMETER_TYPE . ")(" . $UNION_TYPES . ")(" . static::EMPTY . "*\\\$" . $PARAM_NAME . $AFTER_PARAMETER_TYPE . ")/",
+                "$1/*$2*/$3"
+            ],
+            [
+                "Remove union return types",
+                "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . $UNION_TYPES . ")(" . $AFTER_RETURN_TYPE . ")/",
                 "$1/*$2*/$3"
             ],
             [
