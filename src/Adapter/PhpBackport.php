@@ -106,16 +106,6 @@ class PhpBackport
                 "$1/*$3*/$4"
             ],
             [
-                "Remove mixed parameter type",
-                "/(" . $BEFORE_PARAMETER_TYPE . ")(mixed)(" . static::EMPTY . "*\\\$" . $PARAM_NAME . $AFTER_PARAMETER_TYPE . ")/",
-                "$1/*$2*/$3"
-            ],
-            [
-                "Remove mixed return type",
-                "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . "mixed)(" . $AFTER_RETURN_TYPE . ")/",
-                "$1/*$2*/$3"
-            ],
-            [
                 "Remove union parameter types",
                 "/(" . $BEFORE_PARAMETER_TYPE . ")(" . $UNION_TYPES . ")(" . static::EMPTY . "*\\\$" . $PARAM_NAME . $AFTER_PARAMETER_TYPE . ")/",
                 "$1/*$2*/$4"
@@ -124,6 +114,16 @@ class PhpBackport
                 "Remove union return types",
                 "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . $UNION_TYPES . ")(" . $AFTER_RETURN_TYPE . ")/",
                 "$1/*$2*/$4"
+            ],
+            [
+                "Remove mixed parameter type",
+                "/(" . $BEFORE_PARAMETER_TYPE . ")(mixed)(" . static::EMPTY . "*\\\$" . $PARAM_NAME . $AFTER_PARAMETER_TYPE . ")/",
+                "$1/*$2*/$3"
+            ],
+            [
+                "Remove mixed return type",
+                "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . "mixed)(" . $AFTER_RETURN_TYPE . ")/",
+                "$1/*$2*/$3"
             ],
             [
                 "Replace static return type with self",
@@ -138,6 +138,10 @@ class PhpBackport
             }
 
             if (!in_array(strtolower(pathinfo($file->getFileName(), PATHINFO_EXTENSION)), $EXT)) {
+                continue;
+            }
+
+            if (str_contains($file->getFileName(), "/vendor/")) {
                 continue;
             }
 
