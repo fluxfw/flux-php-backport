@@ -160,7 +160,7 @@ class PhpBackport
 
             $code = $old_code = file_get_contents($file->getPathName());
 
-            if (!str_contains($code, "Flux")) {
+            if (!(str_contains($code, "Flux") || str_contains($code, "flux"))) {
                 continue;
             }
 
