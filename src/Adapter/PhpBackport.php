@@ -62,10 +62,8 @@ class PhpBackport
                     $properties = [];
                     $parameters = [];
                     $assignments = [];
-
                     foreach (explode(",", $matches[4]) as $parameter) {
                         $parameter = trim($parameter);
-
                         if (empty($parameter)) {
                             continue;
                         }
@@ -74,25 +72,24 @@ class PhpBackport
                             $parameter_parts = array_reverse(preg_split("/" . static::EMPTY . "+/", $parameter));
                             $parameters[] = $parameter_parts[1] . " " . $parameter_parts[0] . ",";
 
-                            $assignments[] = '$this->' . substr($parameter_parts[0], 1) . " = " . $parameter_parts[0] . ";";
-
                             $parameter_doc_matches = [];
-                            if (preg_match("/\*" . static::EMPTY . "*@param(.+" . preg_quote($parameter_parts[0]) . ".*)" . static::NEW_LINE . "/", $matches[1], $parameter_doc_matches) > 0) {
-                                $parameter_doc = "/** @var " . trim($parameter_doc_matches[1]) . "*/" . static::NEW_LINE . static::INDENT;
+                            if (preg_match("/\*" . static::EMPTY . "*@param(.+" . preg_quote($parameter_parts[0], "/") . ".*)" . static::NEW_LINE . "/", $matches[1], $parameter_doc_matches) > 0) {
+                                $parameter_doc = "/**" . static::NEW_LINE
+                                    . static::INDENT . " * @var " . trim(str_replace($parameter_parts[0], "", $parameter_doc_matches[1])) . static::NEW_LINE
+                                    . static::INDENT . " */" . static::NEW_LINE . static::INDENT;
                             } else {
                                 $parameter_doc = "";
                             }
-
                             $properties[] = $parameter_doc . $parameter . ";";
+
+                            $assignments[] = '$this->' . substr($parameter_parts[0], 1) . " = " . $parameter_parts[0] . ";";
                         } else {
                             $parameters[] = $parameter . ",";
                         }
                     }
-
                     if (empty($properties) || empty($parameters) || empty($assignments)) {
                         return $matches[0];
                     }
-
                     $parameters[count($parameters) - 1] = rtrim($parameters[count($parameters) - 1], ",");
 
                     return implode(static::NEW_LINE, array_map(fn(string $property) : string => static::INDENT . $property, $properties)) . static::NEW_LINE . static::NEW_LINE . static::NEW_LINE
