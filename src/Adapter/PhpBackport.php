@@ -141,13 +141,17 @@ class PhpBackport
                 continue;
             }
 
-            if (str_contains($file->getPathName(), "/vendor/")) {
+            if (str_contains($file->getPathName(), "/vendor/") || !(str_contains($file->getPathName(), "/bin/") || str_contains($file->getPathName(), "/src/"))) {
+                continue;
+            }
+
+            $code = $old_code = file_get_contents($file->getPathName());
+
+            if (!str_contains($code, "Flux")) {
                 continue;
             }
 
             echo "Process " . $file->getPathName() . static::NEW_LINE;
-
-            $code = $old_code = file_get_contents($file->getPathName());
 
             foreach ($REPLACES as [$title, $search, $replace]) {
                 if (preg_match($search, $code) < 1) {
