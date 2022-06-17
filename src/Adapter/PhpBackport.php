@@ -141,7 +141,7 @@ class PhpBackport
                 continue;
             }
 
-            if (str_contains($file->getFileName(), "/vendor/")) {
+            if (str_contains($file->getPathName(), "/vendor/")) {
                 continue;
             }
 
