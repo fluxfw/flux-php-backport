@@ -54,7 +54,7 @@ class PhpBackport
         $REPLACES = [
             [
                 "Replace constructor properties with legacy syntax",
-                "/(" . static::SPACE . "*\/\*[^\/*]*\*\/" . static::EMPTY . "*)?"
+                "/(" . static::SPACE . "*\/\*[^(\/*)]*\*\/" . static::EMPTY . "*)?"
                 . "(" . static::SPACE . "*" . static::VISIBILITY . static::EMPTY . "+function" . static::EMPTY . "+__construct" . static::EMPTY . "*\()"
                 . "([^)]+)"
                 . "(\)" . static::EMPTY . "*{)/",
