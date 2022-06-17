@@ -129,6 +129,16 @@ class PhpBackport
                 "Replace static return type with self",
                 "/(" . $BEFORE_RETURN_TYPE . ")(static)(" . $AFTER_RETURN_TYPE . ")/",
                 "$1/*$2*/self$3"
+            ],
+            [
+                "Remove CurlHandle parameter type",
+                "/(" . $BEFORE_PARAMETER_TYPE . ")(CurlHandle)(" . static::EMPTY . "*\\\$" . $PARAM_NAME . $AFTER_PARAMETER_TYPE . ")/",
+                "$1/*$2*/$3"
+            ],
+            [
+                "Remove CurlHandle return type",
+                "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . "CurlHandle)(" . $AFTER_RETURN_TYPE . ")/",
+                "$1/*$2*/$3"
             ]
         ];
 
