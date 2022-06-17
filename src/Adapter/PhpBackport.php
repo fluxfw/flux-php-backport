@@ -8,13 +8,9 @@ use RecursiveIteratorIterator;
 class PhpBackport
 {
 
-    private const AFTER_PARAMETER_TYPE = "[\s),;=]";
-    private const AFTER_RETURN_TYPE = "[\s{;|=]";
-    private const BEFORE_PARAMETER_TYPE = "[\s(,]";
-    private const BEFORE_RETURN_TYPE_1 = "\)";
-    private const BEFORE_RETURN_TYPE_2 = "\s*:\s*\??";
+    private const EMPTY = "\s";
     private const INDENT = "    ";
-    private const PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
+    private const NEW_LINE = "\n";
     private const SPACE = "[ \t]";
     private const VISIBILITY = "(public|protected|private)";
 
@@ -35,18 +31,30 @@ class PhpBackport
     {
         global $argv;
 
-        $folder = $argv[1];
+        $folder = $argv[1] ?? "";
         if (empty($folder)) {
-            echo "Please pass a folder\n";
+            echo "Please pass a folder" . static::NEW_LINE;
             die(1);
         }
 
-        echo "Port PHP 8.1 back to PHP 7.4 in " . $folder . "\n\n";
+        echo "Port PHP 8.1 back to PHP 7.4" . static::NEW_LINE . static::NEW_LINE;
 
-        $replaces = [
+        $EXT = [
+            "php"
+        ];
+
+        $AFTER_PARAMETER_TYPE = "[" . static::EMPTY . "),;=]";
+        $AFTER_RETURN_TYPE = "[" . static::EMPTY . "{;|=]";
+        $BEFORE_PARAMETER_TYPE = "[" . static::EMPTY . "(,]";
+        $BEFORE_RETURN_TYPE_1 = "\)";
+        $BEFORE_RETURN_TYPE_2 = static::EMPTY . "*:" . static::EMPTY . "*\??";
+        $BEFORE_RETURN_TYPE = $BEFORE_RETURN_TYPE_1 . $BEFORE_RETURN_TYPE_2;
+        $PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
+
+        $REPLACES = [
             [
-                "Change constructor properties to legacy syntax",
-                "/(" . static::SPACE . "*" . static::VISIBILITY . "\s+function\s+__construct\s*\()([\sA-Za-z0-9._$=,?]*)(\)\s*\{)/",
+                "Replace constructor properties with legacy syntax",
+                "/(" . static::SPACE . "*" . static::VISIBILITY . static::EMPTY . "+function" . static::EMPTY . "+__construct" . static::EMPTY . "*\()([^)]+)(\)" . static::EMPTY . "*{)/",
                 function (array $matches) : string {
                     $properties = [];
                     $parameters = [];
@@ -59,9 +67,9 @@ class PhpBackport
                             continue;
                         }
 
-                        if (preg_match("/^" . static::VISIBILITY . "\s/", $parameter) > 0) {
+                        if (preg_match("/^" . static::VISIBILITY . static::EMPTY . "/", $parameter) > 0) {
                             $properties[] = $parameter . ";";
-                            $parameter_parts = array_reverse(preg_split("/\s+/", $parameter));
+                            $parameter_parts = array_reverse(preg_split("/" . static::EMPTY . "+/", $parameter));
                             $parameters[] = $parameter_parts[1] . " " . $parameter_parts[0] . ",";
                             $assignments[] = '$this->' . substr($parameter_parts[0], 1) . " = " . $parameter_parts[0] . ";";
                         } else {
@@ -69,46 +77,39 @@ class PhpBackport
                         }
                     }
 
-                    if (empty($properties)) {
+                    if (empty($properties) || empty($parameters) || empty($assignments)) {
                         return $matches[0];
                     }
 
-                    if (!empty($parameters)) {
-                        $parameters[count($parameters) - 1] = rtrim($parameters[count($parameters) - 1], ",");
-                    }
+                    $parameters[count($parameters) - 1] = rtrim($parameters[count($parameters) - 1], ",");
 
-                    return implode("", array_map(fn(string $property) : string => static::INDENT . $property . "\n", $properties))
+                    return static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $property) : string => static::INDENT . $property, $properties)) . static::NEW_LINE
                         . $matches[1]
-                        . (!empty($parameters) ? "\n" . implode("", array_map(fn(string $parameter) : string => static::INDENT . static::INDENT . $parameter . "\n", $parameters)) . static::INDENT
-                            : "")
-                        . $matches[4]
-                        . (!empty($assignments) ? implode("", array_map(fn(string $assignment) : string => "\n" . static::INDENT . static::INDENT . $assignment, $assignments)) : "");
+                        . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $parameter) : string => static::INDENT . static::INDENT . $parameter, $parameters)) . static::NEW_LINE
+                        . static::INDENT . $matches[4]
+                        . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $assignment) : string => static::INDENT . static::INDENT . $assignment, $assignments));
                 }
             ],
             [
-                "Change static return type to self",
-                "/(" . static::BEFORE_RETURN_TYPE_1 . static::BEFORE_RETURN_TYPE_2 . ")(static)(" . static::AFTER_RETURN_TYPE . ")/",
-                "$1/*$2*/self$3"
-            ],
-            [
-                "Remove mixed return type",
-                "/(" . static::BEFORE_RETURN_TYPE_1 . ")(" . static::BEFORE_RETURN_TYPE_2 . "mixed)(" . static::AFTER_RETURN_TYPE . ")/",
-                "$1/*$2*/$3"
+                "Remove readonly property modifier",
+                "/(" . static::VISIBILITY . static::EMPTY . "+)(readonly)(" . static::EMPTY . "+)/",
+                "$1/*$3*/$4"
             ],
             [
                 "Remove mixed parameter type",
-                "/(" . static::BEFORE_PARAMETER_TYPE . ")(mixed)(\s*\\\$" . static::PARAM_NAME . static::AFTER_PARAMETER_TYPE . ")/",
+                "/(" . $BEFORE_PARAMETER_TYPE . ")(mixed)(" . static::EMPTY . "*\\\$" . $PARAM_NAME . $AFTER_PARAMETER_TYPE . ")/",
                 "$1/*$2*/$3"
             ],
             [
-                "Remove readonly property modifier",
-                "/(" . static::VISIBILITY . "\s+)(readonly)(\s+)/",
-                "$1/*$3*/$4"
+                "Remove mixed return type",
+                "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . "mixed)(" . $AFTER_RETURN_TYPE . ")/",
+                "$1/*$2*/$3"
+            ],
+            [
+                "Replace static return type with self",
+                "/(" . $BEFORE_RETURN_TYPE . ")(static)(" . $AFTER_RETURN_TYPE . ")/",
+                "$1/*$2*/self$3"
             ]
-        ];
-
-        $ext = [
-            "php"
         ];
 
         foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($folder, RecursiveDirectoryIterator::SKIP_DOTS)) as $file) {
@@ -116,20 +117,20 @@ class PhpBackport
                 continue;
             }
 
-            if (!in_array(strtolower(pathinfo($file->getFileName(), PATHINFO_EXTENSION)), $ext)) {
+            if (!in_array(strtolower(pathinfo($file->getFileName(), PATHINFO_EXTENSION)), $EXT)) {
                 continue;
             }
 
-            echo "Process " . $file->getPathName() . "\n";
+            echo "Process " . $file->getPathName() . static::NEW_LINE;
 
             $code = $old_code = file_get_contents($file->getPathName());
 
-            foreach ($replaces as [$title, $search, $replace]) {
+            foreach ($REPLACES as [$title, $search, $replace]) {
                 if (preg_match($search, $code) < 1) {
                     continue;
                 }
 
-                echo "- " . $title . "\n";
+                echo "- " . $title . static::NEW_LINE;
 
                 if (is_callable($replace)) {
                     $new_code = preg_replace_callback($search, $replace, $code);
@@ -143,13 +144,14 @@ class PhpBackport
             }
 
             if ($old_code !== $code) {
-                echo "- Store\n";
+                echo "- Store";
                 file_put_contents($file->getPathName(), $code);
             } else {
-                echo "- No changes\n";
+                echo "- No changes";
             }
-
-            echo "\n";
+            echo static::NEW_LINE . static::NEW_LINE;
         }
+
+        echo static::NEW_LINE;
     }
 }
