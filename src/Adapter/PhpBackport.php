@@ -76,9 +76,9 @@ class PhpBackport
 
                             $assignments[] = '$this->' . substr($parameter_parts[0], 1) . " = " . $parameter_parts[0] . ";";
 
-                            $matches = [];
-                            if (preg_match("/\*" . static::EMPTY . "*@param(.+" . preg_quote($parameter_parts[0]) . ".*)" . static::NEW_LINE . "/", $matches[1], $matches) > 0) {
-                                $parameter_doc = "/** @var " . trim($matches[1]) . "*/" . static::NEW_LINE . static::INDENT;
+                            $parameter_doc_matches = [];
+                            if (preg_match("/\*" . static::EMPTY . "*@param(.+" . preg_quote($parameter_parts[0]) . ".*)" . static::NEW_LINE . "/", $matches[1], $parameter_doc_matches) > 0) {
+                                $parameter_doc = "/** @var " . trim($parameter_doc_matches[1]) . "*/" . static::NEW_LINE . static::INDENT;
                             } else {
                                 $parameter_doc = "";
                             }
