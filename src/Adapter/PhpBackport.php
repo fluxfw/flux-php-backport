@@ -59,7 +59,6 @@ class PhpBackport
                 . "([^)]+)"
                 . "(\)" . static::EMPTY . "*{)/",
                 function (array $matches) : string {
-                    var_dump($matches);
                     $properties = [];
                     $parameters = [];
                     $assignments = [];
@@ -72,10 +71,19 @@ class PhpBackport
                         }
 
                         if (preg_match("/^" . static::VISIBILITY . static::EMPTY . "/", $parameter) > 0) {
-                            $properties[] = $parameter . ";";
                             $parameter_parts = array_reverse(preg_split("/" . static::EMPTY . "+/", $parameter));
                             $parameters[] = $parameter_parts[1] . " " . $parameter_parts[0] . ",";
+
                             $assignments[] = '$this->' . substr($parameter_parts[0], 1) . " = " . $parameter_parts[0] . ";";
+
+                            $matches = [];
+                            if (preg_match("/\*" . static::EMPTY . "*@param(.+" . preg_quote($parameter_parts[0]) . ".*)" . static::NEW_LINE . "/", $matches[1], $matches) > 0) {
+                                $parameter_doc = "/** @var " . trim($matches[1]) . "*/" . static::NEW_LINE . static::INDENT;
+                            } else {
+                                $parameter_doc = "";
+                            }
+
+                            $properties[] = $parameter_doc . $parameter . ";";
                         } else {
                             $parameters[] = $parameter . ",";
                         }
