@@ -54,13 +54,16 @@ class PhpBackport
         $REPLACES = [
             [
                 "Replace constructor properties with legacy syntax",
-                "/(" . static::SPACE . "*" . static::VISIBILITY . static::EMPTY . "+function" . static::EMPTY . "+__construct" . static::EMPTY . "*\()([^)]+)(\)" . static::EMPTY . "*{)/",
+                "/(" . static::SPACE . "*\/\*[^/*]*\*\/" . static::EMPTY . "*)?"
+                . "(" . static::SPACE . "*" . static::VISIBILITY . static::EMPTY . "+function" . static::EMPTY . "+__construct" . static::EMPTY . "*\()"
+                . "([^)]+)"
+                . "(\)" . static::EMPTY . "*{)/",
                 function (array $matches) : string {
                     $properties = [];
                     $parameters = [];
                     $assignments = [];
 
-                    foreach (explode(",", $matches[3]) as $parameter) {
+                    foreach (explode(",", $matches[4]) as $parameter) {
                         $parameter = trim($parameter);
 
                         if (empty($parameter)) {
@@ -83,10 +86,10 @@ class PhpBackport
 
                     $parameters[count($parameters) - 1] = rtrim($parameters[count($parameters) - 1], ",");
 
-                    return static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $property) : string => static::INDENT . $property, $properties)) . static::NEW_LINE
-                        . $matches[1]
+                    return implode(static::NEW_LINE, array_map(fn(string $property) : string => static::INDENT . $property, $properties)) . static::NEW_LINE . static::NEW_LINE
+                        . $matches[2] . $matches[3]
                         . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $parameter) : string => static::INDENT . static::INDENT . $parameter, $parameters)) . static::NEW_LINE
-                        . static::INDENT . $matches[4]
+                        . static::INDENT . $matches[5]
                         . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $assignment) : string => static::INDENT . static::INDENT . $assignment, $assignments));
                 }
             ],
