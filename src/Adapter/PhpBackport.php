@@ -59,6 +59,7 @@ class PhpBackport
                 . "([^)]+)"
                 . "(\)" . static::EMPTY . "*{)/",
                 function (array $matches) : string {
+                    var_dump($matches);
                     $properties = [];
                     $parameters = [];
                     $assignments = [];
