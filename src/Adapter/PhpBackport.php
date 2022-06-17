@@ -151,7 +151,10 @@ class PhpBackport
                 continue;
             }
 
-            if (str_contains($file->getPathName(), "/vendor/") || !(str_contains($file->getPathName(), "/bin/") || str_contains($file->getPathName(), "/src/"))) {
+            if (str_contains($file->getPathName(), "/vendor/")
+                || !(str_contains($file->getPathName(), "/bin/") || str_contains($file->getPathName(), "/classes/")
+                    || str_contains($file->getPathName(), "/src/"))
+            ) {
                 continue;
             }
 
