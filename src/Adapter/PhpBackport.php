@@ -111,8 +111,8 @@ class PhpBackport
                 "/enum" . static::EMPTY . "+(" . $PARAM_NAME . ")"
                 . static::EMPTY . "*:" . static::EMPTY . "*(string|int)" . static::EMPTY . "*"
                 . "([^{]*)\{" . static::EMPTY . "*"
-                . "([^}]+)/"
-                . static::EMPTY . "*\}",
+                . "([^}]+)"
+                . static::EMPTY . "*\}/",
                 function (array $matches) use ($flux_legacy_enum_namespace) : string {
                     $methods = [];
                     foreach (explode(static::NEW_LINE, $matches[4]) as $line) {
