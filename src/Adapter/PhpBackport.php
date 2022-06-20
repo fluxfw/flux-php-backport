@@ -139,6 +139,11 @@ class PhpBackport
                 "Remove CurlHandle return type",
                 "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . "CurlHandle)(" . $AFTER_RETURN_TYPE . ")/",
                 "$1/*$2*/$3"
+            ],
+            [
+                "Change PhpVersionChecker",
+                '/(PhpVersionChecker::new\(\s*">=)8.[01]("\s*\))/',
+                "$17.4$2"
             ]
         ];
 
