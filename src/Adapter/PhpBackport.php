@@ -298,7 +298,7 @@ class PhpBackport
 
                 if ($old_code !== $code) {
                     echo "Process " . $file->getPathName() . static::NEW_LINE;
-                    echo "- Replace enum cases access with methods";
+                    echo "- Replace enum case accesses with methods" . static::NEW_LINE;
                     echo "- Store";
                     file_put_contents($file->getPathName(), $code);
                     echo static::NEW_LINE . static::NEW_LINE;
