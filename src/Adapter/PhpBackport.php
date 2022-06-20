@@ -116,7 +116,7 @@ class PhpBackport
                 . "([^}]+)"
                 . static::EMPTY . "*\}/",
                 function (array $matches) use ($flux_legacy_enum_namespace, &$flux_legacy_enum_classes) : string {
-                    $flux_legacy_enum_classes[] = [$matches[2], $matches[3]];
+                    $flux_legacy_enum_classes[$matches[2] . "\\" . $matches[3]] = [$matches[2], $matches[3]];
 
                     $methods = [];
                     foreach (explode(static::NEW_LINE, $matches[6]) as $line) {
@@ -154,7 +154,7 @@ class PhpBackport
                 . "([^}]+)"
                 . static::EMPTY . "*\}/",
                 function (array $matches) use ($flux_legacy_enum_namespace, &$flux_legacy_enum_classes) : string {
-                    $flux_legacy_enum_classes[] = [$matches[2], $matches[3]];
+                    $flux_legacy_enum_classes[$matches[2] . "\\" . $matches[3]] = [$matches[2], $matches[3]];
 
                     $methods = [];
                     foreach (explode(static::NEW_LINE, $matches[5]) as $line) {
@@ -289,7 +289,7 @@ class PhpBackport
                         continue;
                     }
 
-                    $new_code = preg_replace("/(" . preg_quote($flux_legacy_enum_class[1]) . static::EMPTY . "*::" . static::EMPTY . "*[A-Z0-9_" . static::EMPTY . "]+)([^(])/", "$1()$2", $code);
+                    $new_code = preg_replace("/(" . preg_quote($flux_legacy_enum_class[1]) . static::EMPTY . "*::" . static::EMPTY . "*[A-Z0-9_" . static::EMPTY . "]+)/", "$1()", $code);
 
                     if (is_string($new_code)) {
                         $code = $new_code;
