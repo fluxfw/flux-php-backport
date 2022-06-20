@@ -37,6 +37,12 @@ class PhpBackport
             die(1);
         }
 
+        $flux_legacy_enum_namespace = $argv[2] ?? "";
+        if (empty($flux_legacy_enum_namespace)) {
+            echo "Please pass a namespace for flux-legacy-enum" . static::NEW_LINE;
+            die(1);
+        }
+
         echo "Port PHP 8.1 back to PHP 7.4" . static::NEW_LINE . static::NEW_LINE;
 
         $EXT = [
@@ -98,6 +104,41 @@ class PhpBackport
                         . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $parameter) : string => static::INDENT . static::INDENT . $parameter, $parameters)) . static::NEW_LINE
                         . static::INDENT . $matches[5]
                         . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $assignment) : string => static::INDENT . static::INDENT . $assignment, $assignments));
+                }
+            ],
+            [
+                "Replace enums with flux-legacy-enum",
+                "/enum" . static::EMPTY . "+(" . $PARAM_NAME . ")"
+                . static::EMPTY . "*:" . static::EMPTY . "*(string|int)" . static::EMPTY . "*"
+                . "([^{]*)\{" . static::EMPTY . "*/"
+                . "([^}]+)"
+                . static::EMPTY . "*\}",
+                function (array $matches) use ($flux_legacy_enum_namespace) : string {
+                    $methods = [];
+                    foreach (explode(static::NEW_LINE, $matches[4]) as $line) {
+                        $line = trim($line);
+                        if (empty($line)) {
+                            continue;
+                        }
+
+                        if (!(preg_match("/^case" . static::EMPTY . "/", $line) > 0 && str_ends_with($line, ";"))) {
+                            continue;
+                        }
+
+                        $line = rtrim(ltrim(substr($line, 4)), ";");
+                        [$name, $value] = preg_split("/" . static::EMPTY . "+/", $line, 1);
+                        [, $value] = explode("=", $value, 1);
+                        $value = trim(trim($value), "");
+                        $methods[] = "* @method static static " . $name . "() " . $value;
+                    }
+
+                    $enum_class = $matches[2] === "int" ? "LegacyIntBackedEnum" : "LegacyStringBackedEnum";
+
+                    return "use " . $flux_legacy_enum_namespace . "\\Adapter\\Backed\\" . $enum_class . ";" . static::NEW_LINE . static::NEW_LINE
+                        . (!empty($methods) ? "/**" . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $method) : string => static::INDENT . $method, $methods)) . static::NEW_LINE
+                            . "*/" . static::NEW_LINE : "")
+                        . "class " . $matches[1] . " extends " . $enum_class . " " . $matches[3] . "{" . static::NEW_LINE
+                        . static::NEW_LINE . "}";
                 }
             ],
             [
