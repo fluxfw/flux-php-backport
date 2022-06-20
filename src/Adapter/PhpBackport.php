@@ -126,6 +126,7 @@ class PhpBackport
                         }
 
                         $line = rtrim(ltrim(substr($line, 4)), ";");
+                        var_dump($line);
                         [$name, $value] = preg_split("/" . static::EMPTY . "+/", $line, 1);
                         [, $value] = explode("=", $value, 1);
                         $value = trim(trim($value), "");
