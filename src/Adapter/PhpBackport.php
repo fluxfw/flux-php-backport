@@ -142,8 +142,8 @@ class PhpBackport
             ],
             [
                 "Change PhpVersionChecker",
-                '/(PhpVersionChecker::new\(\s*">=)8.[01]("\s*\))/',
-                "$1\7.4$2"
+                '/(PhpVersionChecker::new\(\s*")>=8.[01]("\s*\))/',
+                "$1>=7.4$2"
             ]
         ];
 
