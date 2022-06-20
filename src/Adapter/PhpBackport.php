@@ -58,6 +58,7 @@ class PhpBackport
         $PARAM_NAME = "[A-Za-z_][A-Za-z0-9_]*";
         $UNION_TYPES = $PARAM_NAME . "(" . static::EMPTY . "*\|" . static::EMPTY . "*" . $PARAM_NAME . ")+";
 
+        $flux_legacy_enum_classes = [];
         $REPLACES = [
             [
                 "Replace constructor properties with legacy syntax",
@@ -108,14 +109,17 @@ class PhpBackport
             ],
             [
                 "Replace backed enums with flux-legacy-enum",
-                "/enum" . static::EMPTY . "+(" . $PARAM_NAME . ")"
+                "/(namespace" . static::EMPTY . "+([^" . static::EMPTY . ";]+);\s" . static::EMPTY . ")" .
+                "enum" . static::EMPTY . "+(" . $PARAM_NAME . ")"
                 . static::EMPTY . "*:" . static::EMPTY . "*(string|int)" . static::EMPTY . "*"
                 . "([^{]*)\{" . static::EMPTY . "*"
                 . "([^}]+)"
                 . static::EMPTY . "*\}/",
-                function (array $matches) use ($flux_legacy_enum_namespace) : string {
+                function (array $matches) use ($flux_legacy_enum_namespace, &$flux_legacy_enum_classes) : string {
+                    $flux_legacy_enum_classes[] = [$matches[2], $matches[3]];
+
                     $methods = [];
-                    foreach (explode(static::NEW_LINE, $matches[4]) as $line) {
+                    foreach (explode(static::NEW_LINE, $matches[6]) as $line) {
                         $line = trim($line);
                         if (empty($line)) {
                             continue;
@@ -132,24 +136,28 @@ class PhpBackport
                         $methods[] = "* @method static static " . $name . "() " . $value;
                     }
 
-                    $enum_class = $matches[2] === "int" ? "LegacyIntBackedEnum" : "LegacyStringBackedEnum";
+                    $enum_class = $matches[4] === "int" ? "LegacyIntBackedEnum" : "LegacyStringBackedEnum";
 
-                    return "use " . $flux_legacy_enum_namespace . "\\Adapter\\Backed\\" . $enum_class . ";" . static::NEW_LINE . static::NEW_LINE
+                    return $matches[1]
+                        . "use " . $flux_legacy_enum_namespace . "\\Adapter\\Backed\\" . $enum_class . ";" . static::NEW_LINE . static::NEW_LINE
                         . (!empty($methods) ? "/**" . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $method) : string => " " . $method, $methods)) . static::NEW_LINE
                             . " */" . static::NEW_LINE : "")
-                        . "class " . $matches[1] . " extends " . $enum_class . " " . $matches[3] . "{" . static::NEW_LINE
+                        . "class " . $matches[3] . " extends " . $enum_class . " " . $matches[5] . "{" . static::NEW_LINE
                         . static::NEW_LINE . "}";
                 }
             ],
             [
                 "Replace unit enums with flux-legacy-enum",
-                "/enum" . static::EMPTY . "+(" . $PARAM_NAME . ")"
+                "/(namespace" . static::EMPTY . "+([^" . static::EMPTY . ";]+);\s" . static::EMPTY . ")" .
+                "enum" . static::EMPTY . "+(" . $PARAM_NAME . ")"
                 . static::EMPTY . "*\{" . static::EMPTY . "*"
                 . "([^}]+)"
                 . static::EMPTY . "*\}/",
-                function (array $matches) use ($flux_legacy_enum_namespace) : string {
+                function (array $matches) use ($flux_legacy_enum_namespace, &$flux_legacy_enum_classes) : string {
+                    $flux_legacy_enum_classes[] = [$matches[2], $matches[3]];
+
                     $methods = [];
-                    foreach (explode(static::NEW_LINE, $matches[3]) as $line) {
+                    foreach (explode(static::NEW_LINE, $matches[5]) as $line) {
                         $line = trim($line);
                         if (empty($line)) {
                             continue;
@@ -163,10 +171,11 @@ class PhpBackport
                         $methods[] = "* @method static static " . $name . "()";
                     }
 
-                    return "use " . $flux_legacy_enum_namespace . "\\Adapter\\Backed\\LegacyUnitEnum;" . static::NEW_LINE . static::NEW_LINE
+                    return $matches[1]
+                        . "use " . $flux_legacy_enum_namespace . "\\Adapter\\Backed\\LegacyUnitEnum;" . static::NEW_LINE . static::NEW_LINE
                         . (!empty($methods) ? "/**" . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $method) : string => " " . $method, $methods)) . static::NEW_LINE
                             . " */" . static::NEW_LINE : "")
-                        . "class " . $matches[1] . " extends LegacyUnitEnum " . $matches[2] . "{" . static::NEW_LINE
+                        . "class " . $matches[3] . " extends LegacyUnitEnum " . $matches[4] . "{" . static::NEW_LINE
                         . static::NEW_LINE . "}";
                 }
             ],
@@ -217,6 +226,7 @@ class PhpBackport
             ]
         ];
 
+        $files = [];
         foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($folder, RecursiveDirectoryIterator::SKIP_DOTS)) as $file) {
             if (!$file->isFile()) {
                 continue;
@@ -266,6 +276,34 @@ class PhpBackport
                 echo "- No changes";
             }
             echo static::NEW_LINE . static::NEW_LINE;
+
+            $files[] = $file;
+        }
+
+        if (!empty($flux_legacy_enum_classes)) {
+            foreach ($files as $file) {
+                $code = $old_code = file_get_contents($file->getPathName());
+
+                foreach ($flux_legacy_enum_classes as $flux_legacy_enum_class) {
+                    if (!str_contains($code, $flux_legacy_enum_class[0])) {
+                        continue;
+                    }
+
+                    $new_code = preg_replace("/(" . preg_quote($flux_legacy_enum_class[1]) . "::[A-Z0-9_]+)/", "$1()", $code);
+
+                    if (is_string($new_code)) {
+                        $code = $new_code;
+                    }
+                }
+
+                if ($old_code !== $code) {
+                    echo "Process " . $file->getPathName() . static::NEW_LINE;
+                    echo "- Replace enum cases access with methods";
+                    echo "- Store";
+                    file_put_contents($file->getPathName(), $code);
+                    echo static::NEW_LINE . static::NEW_LINE;
+                }
+            }
         }
 
         echo static::NEW_LINE;
