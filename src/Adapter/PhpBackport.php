@@ -289,7 +289,7 @@ class PhpBackport
                         continue;
                     }
 
-                    if (preg_match("/" . preg_quote($flux_legacy_enum_class[1]) . static::EMPTY . "*::" . static::EMPTY . "*[A-Z0-9_" . static::EMPTY . "]+\(/", $code) < 1) {
+                    if (preg_match("/" . preg_quote($flux_legacy_enum_class[1]) . static::EMPTY . "*::" . static::EMPTY . "*[A-Z0-9_" . static::EMPTY . "]+\(/", $code) > 0) {
                         continue;
                     }
 
