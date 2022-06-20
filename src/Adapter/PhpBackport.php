@@ -289,6 +289,10 @@ class PhpBackport
                         continue;
                     }
 
+                    if (preg_match("/" . preg_quote($flux_legacy_enum_class[1]) . static::EMPTY . "*::" . static::EMPTY . "*[A-Z0-9_" . static::EMPTY . "]+\(/", $code) < 1) {
+                        continue;
+                    }
+
                     $new_code = preg_replace("/(" . preg_quote($flux_legacy_enum_class[1]) . static::EMPTY . "*::" . static::EMPTY . "*[A-Z0-9_" . static::EMPTY . "]+)/", "$1()", $code);
 
                     if (is_string($new_code)) {
