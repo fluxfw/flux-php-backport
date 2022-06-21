@@ -291,7 +291,7 @@ class PhpBackport
                         continue;
                     }
 
-                    $new_code = preg_replace("/([^A-Z0-9_]"
+                    $new_code = preg_replace("/([^A-Za-z0-9_]"
                         . preg_quote($flux_legacy_enum_class[1])
                         . static::EMPTY . "*::" . static::EMPTY
                         . "*[A-Z0-9_" . static::EMPTY . "]+)"
