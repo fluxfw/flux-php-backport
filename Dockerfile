@@ -24,7 +24,7 @@ RUN mkdir -p /code && chown www-data:www-data -R /code
 
 RUN ln -s /flux-php-backport/bin/php-backport.php /usr/bin/php-backport
 
-USER www-data:www-data
+#USER www-data:www-data
 
 ENTRYPOINT []
 
