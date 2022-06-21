@@ -282,6 +282,8 @@ class PhpBackport
 
         if (!empty($flux_legacy_enum_classes)) {
             foreach ($files as $file) {
+                echo "Process " . $file->getPathName() . static::NEW_LINE;
+
                 $code = $old_code = file_get_contents($file->getPathName());
 
                 foreach ($flux_legacy_enum_classes as $flux_legacy_enum_class) {
@@ -301,12 +303,13 @@ class PhpBackport
                 }
 
                 if ($old_code !== $code) {
-                    echo "Process " . $file->getPathName() . static::NEW_LINE;
                     echo "- Replace enum case accesses with methods" . static::NEW_LINE;
                     echo "- Store";
                     file_put_contents($file->getPathName(), $code);
-                    echo static::NEW_LINE . static::NEW_LINE;
+                } else {
+                    echo "- No changes";
                 }
+                echo static::NEW_LINE . static::NEW_LINE;
             }
         }
 
