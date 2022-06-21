@@ -10,8 +10,10 @@ RUN change-namespace /code/flux-autoload-api FluxAutoloadApi FluxPhpBackport\\Li
 
 FROM alpine:latest AS build
 
-COPY --from=build_namespaces /code/flux-autoload-api /flux-php-backport/libs/flux-autoload-api
-COPY . /flux-php-backport
+COPY --from=build_namespaces /code/flux-autoload-api /build/flux-php-backport/libs/flux-autoload-api
+COPY . /build/flux-php-backport
+
+RUN (cd /build && tar -czf flux-php-backport.tar.gz flux-php-backport)
 
 FROM php:8.1-cli-alpine
 
@@ -26,7 +28,7 @@ USER www-data:www-data
 
 ENTRYPOINT []
 
-COPY --from=build /flux-php-backport /flux-php-backport
+COPY --from=build /build /
 
 ARG COMMIT_SHA
 LABEL org.opencontainers.image.revision="$COMMIT_SHA"
