@@ -19,7 +19,6 @@ FROM php:8.1-cli-alpine
 
 LABEL org.opencontainers.image.source="https://github.com/flux-caps/flux-php-backport"
 LABEL maintainer="fluxlabs <support@fluxlabs.ch> (https://fluxlabs.ch)"
-LABEL flux-docker-registry-rest-api-build-path="/flux-php-backport.tar.gz"
 
 RUN mkdir -p /code && chown www-data:www-data -R /code
 
