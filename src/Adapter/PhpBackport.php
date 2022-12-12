@@ -191,7 +191,7 @@ class PhpBackport
             ],
             [
                 "Remove SensitiveParameter attribute",
-                "/(" . static::EMPTY . "+)(#[SensitiveParameter])(" . static::EMPTY . "+)/",
+                "/(" . static::EMPTY . "+)(#\[SensitiveParameter\])(" . static::EMPTY . "+)/",
                 "$1/*$2*/$3"
             ],
             [
