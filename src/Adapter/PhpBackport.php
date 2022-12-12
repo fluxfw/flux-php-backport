@@ -180,9 +180,19 @@ class PhpBackport
                 }
             ],
             [
+                "Remove class modifier",
+                "/(readonly)(" . static::EMPTY . "+class)/",
+                "*$1*/$2"
+            ],
+            [
                 "Remove readonly property modifier",
                 "/(" . static::VISIBILITY . static::EMPTY . "+)(readonly)(" . static::EMPTY . "+)/",
                 "$1/*$3*/$4"
+            ],
+            [
+                "Remove SensitiveParameter attribute",
+                "/(" . static::EMPTY . "+)(#[SensitiveParameter])(" . static::EMPTY . "+)/",
+                "$1/*$2*/$3"
             ],
             [
                 "Remove union parameter types",
@@ -221,7 +231,7 @@ class PhpBackport
             ],
             [
                 "Change PhpVersionChecker",
-                "/(PhpVersionChecker::new\(\s*[\"'])>=8\.[01]([\"']\s*\))/",
+                "/(PhpVersionChecker::new\(\s*[\"'])>=8\.[012]([\"']\s*\))/",
                 "$1>=7.4$2"
             ]
         ];
