@@ -37,12 +37,6 @@ class PhpBackport
             die(1);
         }
 
-        $flux_legacy_enum_namespace = $argv[2] ?? "";
-        if (empty($flux_legacy_enum_namespace)) {
-            echo "Please pass a namespace for flux-legacy-enum" . static::NEW_LINE;
-            die(1);
-        }
-
         echo "Port PHP 8.1 back to PHP 7.4" . static::NEW_LINE . static::NEW_LINE;
 
         $EXT = [
@@ -115,7 +109,7 @@ class PhpBackport
                 . "([^{]*)\{" . static::EMPTY . "*"
                 . "([^}]+)"
                 . static::EMPTY . "*\}/",
-                function (array $matches) use ($flux_legacy_enum_namespace, &$flux_legacy_enum_classes) : string {
+                function (array $matches) use (&$flux_legacy_enum_classes) : string {
                     $flux_legacy_enum_classes[$matches[2] . "\\" . $matches[3]] = [$matches[2], $matches[3]];
 
                     $methods = [];
@@ -139,7 +133,7 @@ class PhpBackport
                     $enum_class = $matches[4] === "int" ? "LegacyIntBackedEnum" : "LegacyStringBackedEnum";
 
                     return $matches[1]
-                        . "use " . $flux_legacy_enum_namespace . "\\Adapter\\Backed\\" . $enum_class . ";" . static::NEW_LINE . static::NEW_LINE
+                        . "use FluxLegacyEnum\\Adapter\\Backed\\" . $enum_class . ";" . static::NEW_LINE . static::NEW_LINE
                         . (!empty($methods) ? "/**" . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $method) : string => " " . $method, $methods)) . static::NEW_LINE
                             . " */" . static::NEW_LINE : "")
                         . "class " . $matches[3] . " extends " . $enum_class . " " . $matches[5] . "{" . static::NEW_LINE
@@ -153,7 +147,7 @@ class PhpBackport
                 . static::EMPTY . "*\{" . static::EMPTY . "*"
                 . "([^}]+)"
                 . static::EMPTY . "*\}/",
-                function (array $matches) use ($flux_legacy_enum_namespace, &$flux_legacy_enum_classes) : string {
+                function (array $matches) use (&$flux_legacy_enum_classes) : string {
                     $flux_legacy_enum_classes[$matches[2] . "\\" . $matches[3]] = [$matches[2], $matches[3]];
 
                     $methods = [];
@@ -172,7 +166,7 @@ class PhpBackport
                     }
 
                     return $matches[1]
-                        . "use " . $flux_legacy_enum_namespace . "\\Adapter\\Backed\\LegacyUnitEnum;" . static::NEW_LINE . static::NEW_LINE
+                        . "use FluxLegacyEnum\\Adapter\\Backed\\LegacyUnitEnum;" . static::NEW_LINE . static::NEW_LINE
                         . (!empty($methods) ? "/**" . static::NEW_LINE . implode(static::NEW_LINE, array_map(fn(string $method) : string => " " . $method, $methods)) . static::NEW_LINE
                             . " */" . static::NEW_LINE : "")
                         . "class " . $matches[3] . " extends LegacyUnitEnum " . $matches[4] . "{" . static::NEW_LINE
@@ -228,11 +222,6 @@ class PhpBackport
                 "Remove CurlHandle return type",
                 "/(" . $BEFORE_RETURN_TYPE_1 . ")(" . $BEFORE_RETURN_TYPE_2 . "CurlHandle)(" . $AFTER_RETURN_TYPE . ")/",
                 "$1/*$2*/$3"
-            ],
-            [
-                "Change PhpVersionChecker",
-                "/(PhpVersionChecker::new\(\s*[\"'])>=8\.[012]([\"']\s*\))/",
-                "$1>=7.4$2"
             ]
         ];
 
