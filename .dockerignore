@@ -1,5 +1,1 @@
 *
-!bin/php-backport.php
-!src
-!src/**
-!autoload.php
