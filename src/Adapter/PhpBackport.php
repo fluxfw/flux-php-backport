@@ -37,7 +37,7 @@ class PhpBackport
             die(1);
         }
 
-        echo "Port PHP 8.1 back to PHP 7.4" . static::NEW_LINE . static::NEW_LINE;
+        echo "Port PHP 8.2 back to PHP 7.4" . static::NEW_LINE . static::NEW_LINE;
 
         $EXT = [
             "php"
