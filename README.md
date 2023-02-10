@@ -1,6 +1,6 @@
 # flux-php-backport
 
-Port PHP 8.1 back to PHP 7.4
+Port PHP 8.2 back to PHP 7.4
 
 ## Example
 
